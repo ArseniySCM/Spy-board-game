@@ -1,6 +1,6 @@
-
 local composer = require( "composer" )
 local globals = require 'globals'
+local icons = require 'icons'
 
 local scene = composer.newScene()
 
@@ -46,14 +46,13 @@ function scene:create( event )
 		display.contentCenterY, 
 		display.safeActualContentWidth, 
 		display.safeActualContentHeight)
-	background:setFillColor(0.65, 0.8, 0.8)
+	background:setFillColor(unpack(globals.theme.background))
 	
 	local upBar = display.newRect(sceneGroup, display.contentCenterX, globals.upside + 50, globals.safeWidth, 100)
-	upBar:setFillColor(0.55, 0.7, 0.7)
+	upBar:setFillColor(unpack(globals.theme.primary))
 	
-	local back = display.newImage(sceneGroup, 'back-arrow.png', globals.leftside + 50, upBar.y)
-	back.width, back.height = 60, 60
-	back:addEventListener('tap', backAndSave)
+	local backGroup = icons.newBack(sceneGroup, globals.leftside + 50, upBar.y, 40, globals.theme.buttonLabel)
+	backGroup:addEventListener('tap', backAndSave)
 	
 	local title = display.newText({
 		parent = sceneGroup, 
@@ -61,10 +60,10 @@ function scene:create( event )
 		x = display.contentCenterX, 
 		y = upBar.y, 
 		font = native.systemFontBold, 
-		fontSize = 32,
+		fontSize = 28,
 		align = 'center'
 	})
-	title:setFillColor(0,0,0)
+	title:setFillColor(unpack(globals.theme.buttonLabel))
 	
 	
 	textBox = native.newTextBox(
@@ -77,7 +76,7 @@ function scene:create( event )
 	sceneGroup:insert(textBox)
 	
 	textBox.isEditable = true
-	textBox.size = 22
+	textBox.size = 20
 	textBox.text = data
 end
 

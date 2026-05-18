@@ -15,64 +15,64 @@ function M.create()
 	
 	--functions of buttons
 	local function closeMenu() --press cancel
-	
 		M.group.isVisible = false
 		nameTextField.isVisible = false
-		
 		return true
 	end
 	
 	local function confirm() --press ok
-	
 		M.group.isVisible = false
 		nameTextField.isVisible = false
-		
 		globals.rules.players[playerIndex] = nameTextField.text
 		createButtons()
-		
 		return true
 	end
 	
 	local background = display.newRect(M.group, 0, 0, globals.safeWidth, globals.safeHeight)
-	background:setFillColor(0,0,0, 0.3)
+	background:setFillColor(0,0,0, 0.4)
 	background:addEventListener('tap', function() return true; end) --dont let tap on other elements
 	
 	--Menu
-	local shadow = display.newRoundedRect(M.group, 0, 4, 374, 204, 20)
-	shadow:setFillColor(0.1, 0.5, 0.5)
+	local shadow = display.newRoundedRect(M.group, 0, 4, 380, 240, 20)
+	shadow:setFillColor(unpack(globals.theme.shadow))
 	
-	local menu = display.newRoundedRect(M.group, 0, 0, 370, 200, 20)
-	menu:setFillColor(0.3, 0.8, 0.8, 0.9)
+	local menu = display.newRoundedRect(M.group, 0, 0, 380, 240, 20)
+	menu:setFillColor(unpack(globals.theme.card))
 	
-	textFieldBg = display.newRoundedRect(M.group, 0, -50, 360, 65, 20)
-	textFieldBg:setFillColor(0.2, 0.7, 0.7, 0.9)
+	local title = display.newText(M.group, "EDIT NAME", 0, -80, native.systemFontBold, 24)
+	title:setFillColor(unpack(globals.theme.text))
+
+	textFieldBg = display.newRoundedRect(M.group, 0, -10, 340, 60, 10)
+	textFieldBg:setFillColor(unpack(globals.theme.background))
 	
-	nameTextField = native.newTextField(0, - 50, 330, 55)
-	nameTextField.text = tostring( globals.rules.players[i] )
+	nameTextField = native.newTextField(0, -10, 320, 50)
+	nameTextField.text = ""
 	nameTextField.hasBackground = false
 	M.group:insert(nameTextField)
 	
 	--Buttons
 	local cancel = widget.newButton({
-		x = menu.width / - 4, y = 60,
-		
-		width = menu.width * 0.5,
-		height = 50,
-		
-		label = 'Cancel',
-		fontSize = 27,
-		font = native.systemFont,
+		x = -90, y = 70,
+		width = 160, height = 50,
+        shape = "roundedRect",
+        cornerRadius = 10,
+		label = 'CANCEL',
+		fontSize = 20,
+		font = native.systemFontBold,
+        fillColor = { default=globals.theme.accent, over=globals.theme.accent },
+        labelColor = { default=globals.theme.buttonLabel, over=globals.theme.buttonLabel }
 	})
 
 	local ok = widget.newButton({
-		x = menu.width / 4, y = 60,
-		
-		width = menu.width * 0.5,
-		height = 50,
-		
-		label = 'Ok',
-		fontSize = 27,
-		font = native.systemFont,
+		x = 90, y = 70,
+		width = 160, height = 50,
+        shape = "roundedRect",
+        cornerRadius = 10,
+		label = 'OK',
+		fontSize = 20,
+		font = native.systemFontBold,
+        fillColor = { default=globals.theme.primary, over=globals.theme.primary },
+        labelColor = { default=globals.theme.buttonLabel, over=globals.theme.buttonLabel }
 	})
 	
 	M.group:insert(ok)
@@ -83,7 +83,6 @@ function M.create()
 	
 	M.group.isVisible = false
 	nameTextField.isVisible = false
-	
 end
 
 --open this menu
