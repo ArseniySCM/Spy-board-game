@@ -3,6 +3,7 @@ local composer = require( "composer" )
 local widget = require 'widget'
 local globals = require 'globals'
 local nameModule = require 'changeName'
+local icons = require 'icons'
 
 local scene = composer.newScene()
 
@@ -54,11 +55,11 @@ function createButtons()
 		
 			local y = 90 * i - 20
 			
-			local shadow = display.newRoundedRect(buttonGroup, 0, y + 4, 460, 79, 10)
-			shadow:setFillColor(0, 0, 0, 0.3)
+			local shadow = display.newRoundedRect(buttonGroup, 0, y + 4, 460, 79, 15)
+			shadow:setFillColor(unpack(globals.theme.shadow))
 			
-			local buttonBg = display.newRoundedRect(buttonGroup, 0, y, 460, 75, 10)
-			buttonBg:setFillColor(0.8, 0.9, 0.9)
+			local buttonBg = display.newRoundedRect(buttonGroup, 0, y, 460, 75, 15)
+			buttonBg:setFillColor(unpack(globals.theme.card))
 			buttonBg.id = i
 			buttonBg:addEventListener('tap', openChangeMenu)
 			buttonBg:addEventListener('tap', function() return true end)
@@ -66,30 +67,27 @@ function createButtons()
 			buttonTexts[i] = display.newText({
 				parent = buttonGroup, 
 				text = globals.rules.players[i], 
-				x = 0, 
+				x = -20, 
 				y = y, 
-				width = 440, 
+				width = 380, 
 				height = 0, 
 				font = native.systemFont, 
-				fontSize = 40,
+				fontSize = 32,
 				})
-			buttonTexts[i]:setFillColor(0, 0, 0)
+			buttonTexts[i]:setFillColor(unpack(globals.theme.text))
 			
-			local removeIcon = display.newImage(buttonGroup, 'remove.png', buttonBg.width / 2 - 50, y)
-			removeIcon.width, removeIcon.height = 50, 50
-			removeIcon.id = i
-			removeIcon:addEventListener('tap', removeFromList)
+			local removeIconGroup = icons.newRemove(buttonGroup, buttonBg.width / 2 - 40, y, 30, globals.theme.accent)
+			removeIconGroup.id = i
+			removeIconGroup:addEventListener('tap', removeFromList)
 		end
 		
-		local shadow = display.newRoundedRect(buttonGroup, 0, 90 * (#globals.rules.players + 1) - 16, 460, 79, 10)
-		shadow:setFillColor(0, 0, 0, 0.3)
+		local shadow = display.newRoundedRect(buttonGroup, 0, 90 * (#globals.rules.players + 1) - 16, 460, 79, 15)
+		shadow:setFillColor(unpack(globals.theme.shadow))
 		
-		local endButtonBg = display.newRoundedRect(buttonGroup, 0, 90 * (#globals.rules.players + 1) - 20, 460, 75, 10)
-		endButtonBg:setFillColor(0.6, 0.7, 0.7)
+		local endButtonBg = display.newRoundedRect(buttonGroup, 0, 90 * (#globals.rules.players + 1) - 20, 460, 75, 15)
+		endButtonBg:setFillColor(unpack(globals.theme.primary))
 		
-		local addPlayer = display.newImage(buttonGroup, 'add.png', endButtonBg.x, endButtonBg.y)
-		addPlayer.width = 50
-		addPlayer.height = 50
+		icons.newPlus(buttonGroup, endButtonBg.x, endButtonBg.y, 40, globals.theme.buttonLabel)
 		endButtonBg:addEventListener('tap', addToList)
 		
 		scrollView:insert(buttonGroup)
@@ -100,41 +98,35 @@ end
 function scene:create( event )
 
 	local sceneGroup = self.view
-	-- Code here runs when the scene is first created but has not yet appeared on screen
-	
-	
-	--sceneGroup:insert(buttonGroup)
-	
-	scrollView = widget.newScrollView(
-		{	
-			width = globals.safeWidth,
-			height = globals.safeHeight * 0.7 + 100,
-			y = display.contentCenterY + 50,
-			x = display.contentCenterX,
-			backgroundColor = {0.7, 0.8, 0.8, 0.5},
-			horizontalScrollDisabled = true
-		}
-	)
-
-	sceneGroup:insert(scrollView)
 	
 	local background = display.newRect(sceneGroup, 
 		display.contentCenterX, 
 		display.contentCenterY, 
 		display.safeActualContentWidth, 
 		display.safeActualContentHeight)
-	background:setFillColor(0.65, 0.8, 0.8)
+	background:setFillColor(unpack(globals.theme.background))
 	
 	local upBar = display.newRect(sceneGroup, display.contentCenterX, globals.upside + 50, globals.safeWidth, 100)
-	upBar:setFillColor(0.55, 0.7, 0.7)
+	upBar:setFillColor(unpack(globals.theme.primary))
 	
-	local back = display.newImage(sceneGroup, 'back-arrow.png', globals.leftside + 50, upBar.y)
-	back.width, back.height = 60, 60
-	back:addEventListener('tap', function() composer.gotoScene( "menu" ) display.remove(buttonGroup) return true end)
+	local backGroup = icons.newBack(sceneGroup, globals.leftside + 50, upBar.y, 40, globals.theme.buttonLabel)
+	backGroup:addEventListener('tap', function() composer.gotoScene( "menu" ) display.remove(buttonGroup) return true end)
 	
-	local title = display.newText(sceneGroup, 'PLAYERS', display.contentCenterX, upBar.y, native.systemFontBold, 40)
-	title:setFillColor(0,0,0)
+	local title = display.newText(sceneGroup, 'PLAYERS', display.contentCenterX, upBar.y, native.systemFontBold, 36)
+	title:setFillColor(unpack(globals.theme.buttonLabel))
 	
+	scrollView = widget.newScrollView(
+		{	
+			width = globals.safeWidth,
+			height = globals.safeHeight - 150,
+			y = display.contentCenterY + 60,
+			x = display.contentCenterX,
+			backgroundColor = {0,0,0,0},
+			horizontalScrollDisabled = true
+		}
+	)
+	sceneGroup:insert(scrollView)
+
 	createButtons()
 	scrollView:toFront()
 	nameModule.create()

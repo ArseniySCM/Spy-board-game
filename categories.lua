@@ -1,7 +1,7 @@
-
 local composer = require( "composer" )
 local globals = require 'globals'
 local widget = require 'widget'
+local icons = require 'icons'
 
 local scene = composer.newScene()
 
@@ -12,31 +12,24 @@ local scene = composer.newScene()
 	local data
 	local path = system.pathForFile( "categories.txt", system.DocumentsDirectory )
 	
---end
- 
- 
-local file, errorString = io.open( path, "r" )
-if file then
-
-    data = file:read( "*a" )
-    io.close( file )
-end
-
 --manage categories
 local function addCategory(event)
-
-	if table.indexOf(globals.rules.categories, event.target.id) == nil then	--if category disabled
-	
-		table.insert(globals.rules.categories, event.target.id)
-		checkmarks[event.target.index].fill = { type="image", filename='checkmark.png'}
-		
+    local index = event.target.index
+    local id = event.target.id
+    
+	if table.indexOf(globals.rules.categories, id) == nil then	--if category disabled
+		table.insert(globals.rules.categories, id)
 	else --if enabled
-	
-		table.remove(globals.rules.categories, table.indexOf(globals.rules.categories, event.target.id))
-		checkmarks[event.target.index].fill = { type="image", filename='remove.png'}
-		
+		table.remove(globals.rules.categories, table.indexOf(globals.rules.categories, id))
 	end
-	
+    
+    -- Update icon
+    display.remove(checkmarks[index])
+    if table.indexOf(globals.rules.categories, id) then
+        checkmarks[index] = icons.newCheck(event.target.parent, event.target.x + 180, event.target.y, 30, globals.theme.primary)
+    else
+        checkmarks[index] = icons.newRemove(event.target.parent, event.target.x + 180, event.target.y, 30, globals.theme.accent)
+    end
 end
 
 --create category buttons
@@ -56,11 +49,11 @@ local function createCategories()
 			N = N + 1
 			local y = 90 * N - 20
 			
-			local shadow = display.newRoundedRect(buttonGroup, 0, y + 4, 460, 79, 10)
-			shadow:setFillColor(0, 0, 0, 0.3)
+			local shadow = display.newRoundedRect(buttonGroup, 0, y + 4, 460, 79, 15)
+			shadow:setFillColor(unpack(globals.theme.shadow))
 			
-			local buttonBg = display.newRoundedRect(buttonGroup, 0, y, 460, 75, 10)
-			buttonBg:setFillColor(0.8, 0.9, 0.9)
+			local buttonBg = display.newRoundedRect(buttonGroup, 0, y, 460, 75, 15)
+			buttonBg:setFillColor(unpack(globals.theme.card))
 			buttonBg.id = k
 			buttonBg.index = N
 			buttonBg:addEventListener('tap', addCategory)
@@ -68,28 +61,20 @@ local function createCategories()
 			local categoryName = display.newText({
 				parent = buttonGroup, 
 				text = k, 
-				x = - globals.safeWidth * 0.1, 
+				x = -20, 
 				y = y, 
-				width = globals.safeWidth * 0.6, 
+				width = 320, 
 				height = 0, 
 				font = native.systemFont, 
-				fontSize = 37,
+				fontSize = 32,
 				})
 		
-			categoryName:setFillColor(0.2, 0.2, 0.2)
-			
-			
-			checkmarks[N] = display.newImage(buttonGroup, 'remove.png', buttonBg.width / 2 - 50, y)
-			checkmarks[N].width, checkmarks[N].height = 50, 50
+			categoryName:setFillColor(unpack(globals.theme.text))
 			
 			if table.indexOf(globals.rules.categories, k) then	--enable checking
-			
-				checkmarks[N].fill = { type="image", filename='checkmark.png'}
-				
+				checkmarks[N] = icons.newCheck(buttonGroup, 180, y, 30, globals.theme.primary)
 			else
-			
-				checkmarks[N].fill = { type="image", filename='remove.png'}
-				
+				checkmarks[N] = icons.newRemove(buttonGroup, 180, y, 30, globals.theme.accent)
 			end
 		end
 		
@@ -97,45 +82,39 @@ local function createCategories()
 		
 end
 
--- -----------------------------------------------------------------------------------
--- Scene event functions
--- -----------------------------------------------------------------------------------
-
 -- create()
 function scene:create( event )
 
 	local sceneGroup = self.view
-	
-	scrollView = widget.newScrollView(
-		{	
-			width = globals.safeWidth,
-			height = globals.safeHeight - 100,
-			y = display.contentCenterY + 50,
-			x = display.contentCenterX,
-			backgroundColor = {0.7, 0.8, 0.8, 0.5},
-			horizontalScrollDisabled = true,
-			bottomPadding = 60
-		}
-	)
-
-	sceneGroup:insert(scrollView)
 	
 	local background = display.newRect(sceneGroup, 
 		display.contentCenterX, 
 		display.contentCenterY, 
 		display.safeActualContentWidth, 
 		display.safeActualContentHeight)
-	background:setFillColor(0.65, 0.8, 0.8)
+	background:setFillColor(unpack(globals.theme.background))
 	
 	local upBar = display.newRect(sceneGroup, display.contentCenterX, globals.upside + 50, globals.safeWidth, 100)
-	upBar:setFillColor(0.55, 0.7, 0.7)
+	upBar:setFillColor(unpack(globals.theme.primary))
 	
-	local back = display.newImage(sceneGroup, 'back-arrow.png', globals.leftside + 50, upBar.y)
-	back.width, back.height = 60, 60
-	back:addEventListener('tap', function() composer.gotoScene( "menu" ) display.remove(buttonGroup) return true end)
+	local backGroup = icons.newBack(sceneGroup, globals.leftside + 50, upBar.y, 40, globals.theme.buttonLabel)
+	backGroup:addEventListener('tap', function() composer.gotoScene( "menu" ) display.remove(buttonGroup) return true end)
 	
-	local title = display.newText(sceneGroup, 'CATEGORIES', display.contentCenterX, upBar.y, native.systemFontBold, 40)
-	title:setFillColor(0,0,0)
+	local title = display.newText(sceneGroup, 'CATEGORIES', display.contentCenterX, upBar.y, native.systemFontBold, 36)
+	title:setFillColor(unpack(globals.theme.buttonLabel))
+	
+	scrollView = widget.newScrollView(
+		{	
+			width = globals.safeWidth,
+			height = globals.safeHeight - 150,
+			y = display.contentCenterY + 60,
+			x = display.contentCenterX,
+			backgroundColor = {0,0,0,0},
+			horizontalScrollDisabled = true,
+			bottomPadding = 60
+		}
+	)
+	sceneGroup:insert(scrollView)
 	
 	createCategories()
 	scrollView:toFront()

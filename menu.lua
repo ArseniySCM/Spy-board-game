@@ -7,11 +7,17 @@ local globals = require( "globals" )
 local scene = composer.newScene()
 
 local buttonColor = {0.8, 0.9, 0.9}
-local buttons = {'start', 'players', 'settings', 'categories', 'edit categories'}
+local buttons = {'start', 'multiplayer', 'players', 'settings', 'categories', 'edit categories'}
 
 local function openMenu(event)
 	if event.target.id == 'start' then
+		globals.isMultiplayer = false
 		composer.gotoScene( "game" )
+		return
+	end
+	
+	if event.target.id == 'multiplayer' then
+		composer.gotoScene( "multiplayer" )
 		return
 	end
 	
@@ -50,29 +56,29 @@ function scene:create( event )
 		display.contentCenterY, 
 		display.safeActualContentWidth, 
 		display.safeActualContentHeight)
-	background:setFillColor(0.65, 0.8, 0.8)
+	background:setFillColor(unpack(globals.theme.background))
 
 	--Game title in main menu
 	local gameName = display.newText({
 		text = 'SPY GAME',
 		x = display.contentCenterX,
-		y = globals.upside + 80, 
+		y = globals.upside + 120, 
 		font = native.systemFontBold,
-		fontSize = 60,
+		fontSize = 64,
 		align = 'center',
 		parent = sceneGroup
 	})
-	gameName:setFillColor(0, 0, 0)
+	gameName:setFillColor(unpack(globals.theme.primary))
 	
 	--Create all menu buttons
 	for btn=1, #buttons do 
 	
 		local buttonGroup = display.newGroup()
 		buttonGroup.x = display.contentCenterX
-		buttonGroup.y = 60 + 100 * btn
+		buttonGroup.y = 150 + 100 * btn
 		
-		local shadow = display.newRoundedRect(buttonGroup, 0, 4, 408, 86, 10)
-		shadow:setFillColor(0, 0, 0, 0.3)
+		local shadow = display.newRoundedRect(buttonGroup, 0, 4, 408, 86, 15)
+		shadow:setFillColor(unpack(globals.theme.shadow))
 		
 		--button template
 		local menuButton = widget.newButton({
@@ -80,16 +86,15 @@ function scene:create( event )
 		width = 400, height = 80,
 		
 		shape = "roundedRect",
-		cornerRadius = 10,
+		cornerRadius = 15,
 		
 		label = string.upper(buttons[btn]),
 		font = native.systemFontBold,
-		fontSize = 30,
+		fontSize = 24,
 		id = buttons[btn],
-		--onPress = startGame,
 		
-		fillColor = { default=buttonColor, over=buttonColor },
-		labelColor = { default={ 0, 0, 0, 0.9 }, over={ 0, 0, 0, 0.9 } },
+		fillColor = { default=globals.theme.primary, over=globals.theme.secondary },
+		labelColor = { default=globals.theme.buttonLabel, over=globals.theme.buttonLabel },
 		})
 		
 		sceneGroup:insert(buttonGroup)

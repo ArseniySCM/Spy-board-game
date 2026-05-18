@@ -1,6 +1,7 @@
 
 local composer = require( "composer" )
 local globals = require 'globals'
+local icons = require 'icons'
 
 local scene = composer.newScene()
 
@@ -49,27 +50,26 @@ function scene:create( event )
 		display.contentCenterY, 
 		display.safeActualContentWidth, 
 		display.safeActualContentHeight)
-	background:setFillColor(0.65, 0.8, 0.8)
+	background:setFillColor(unpack(globals.theme.background))
 	
 	local upBar = display.newRect(sceneGroup, display.contentCenterX, globals.upside + 50, globals.safeWidth, 100)
-	upBar:setFillColor(0.55, 0.7, 0.7)
+	upBar:setFillColor(unpack(globals.theme.primary))
 	
-	local back = display.newImage(sceneGroup, 'back-arrow.png', globals.leftside + 50, upBar.y)
-	back.width, back.height = 60, 60
-	back:addEventListener('tap', function() composer.gotoScene( "menu" ) return true end)
+	local backGroup = icons.newBack(sceneGroup, globals.leftside + 50, upBar.y, 40, globals.theme.buttonLabel)
+	backGroup:addEventListener('tap', function() composer.gotoScene( "menu" ) return true end)
 	
-	local title = display.newText(sceneGroup, 'SETTINGS', display.contentCenterX, upBar.y, native.systemFontBold, 40)
-	title:setFillColor(0,0,0)
+	local title = display.newText(sceneGroup, 'SETTINGS', display.contentCenterX, upBar.y, native.systemFontBold, 36)
+	title:setFillColor(unpack(globals.theme.buttonLabel))
 	
 	for a=1, 2 do
 	
-		local posY = 70 + 90 * a
+		local posY = 150 + 100 * a
 		
-		local shadow = display.newRoundedRect(sceneGroup, display.contentCenterX, posY + 4, 440, 79, 10)
-		shadow:setFillColor(0, 0, 0, 0.3)
+		local shadow = display.newRoundedRect(sceneGroup, display.contentCenterX, posY + 4, 440, 79, 15)
+		shadow:setFillColor(unpack(globals.theme.shadow))
 			
-		local buttonBg = display.newRoundedRect(sceneGroup, display.contentCenterX, posY, 440, 75, 10)
-		buttonBg:setFillColor(0.8, 0.9, 0.9)
+		local buttonBg = display.newRoundedRect(sceneGroup, display.contentCenterX, posY, 440, 75, 15)
+		buttonBg:setFillColor(unpack(globals.theme.card))
 		
 		texts[a] = display.newText({
 			parent = sceneGroup,
@@ -80,23 +80,25 @@ function scene:create( event )
 			font = native.systemFont,
 			fontSize = 28,
 		})
-		texts[a]:setFillColor(0, 0, 0)
+		texts[a]:setFillColor(unpack(globals.theme.text))
 		
-		local add = display.newImage(sceneGroup, 'add.png', display.contentCenterX + buttonBg.width / 2 - 30, posY)
-		add.width, add.height = 40, 40
-		add.id = a
-		add:addEventListener('tap', addF)
+		local addBtn = display.newRect(sceneGroup, display.contentCenterX + buttonBg.width / 2 - 40, posY, 60, 60)
+		addBtn.isVisible = false
+		addBtn.isHitTestable = true
+		addBtn.id = a
+		addBtn:addEventListener('tap', addF)
+		icons.newPlus(sceneGroup, addBtn.x, addBtn.y, 30, globals.theme.primary)
 
-		local minus = display.newImage(sceneGroup, 'minus.png', display.contentCenterX - buttonBg.width / 2 + 30, posY)
-		minus.width, minus.height = 40, 40
-		minus.id = a
-		minus:addEventListener('tap', minusF)
+		local minusBtn = display.newRect(sceneGroup, display.contentCenterX - buttonBg.width / 2 + 40, posY, 60, 60)
+		minusBtn.isVisible = false
+		minusBtn.isHitTestable = true
+		minusBtn.id = a
+		minusBtn:addEventListener('tap', minusF)
+		icons.newMinus(sceneGroup, minusBtn.x, minusBtn.y, 30, globals.theme.accent)
 	end
 	
 	texts[1].text = 'Spies: ' .. globals.rules.spies..' - '..#globals.rules.players .. ' players'
 	texts[2].text = 'Time: ' .. globals.convertTime(globals.rules.time)
-	
-	local text = display.newText(sceneGroup,'Таймер не працює :(', display.contentCenterX, display.contentCenterY, native.systemFont, 30)
 end
 
 

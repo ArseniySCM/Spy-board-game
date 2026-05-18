@@ -14,6 +14,17 @@ M.rules = {
 	data = {}
 }
 
+M.theme = {
+    background = {0.95, 0.95, 0.95},
+    primary = {0.2, 0.4, 0.8},
+    secondary = {0.4, 0.6, 1.0},
+    accent = {1, 0.4, 0.2},
+    text = {0.1, 0.1, 0.1},
+    buttonLabel = {1, 1, 1},
+    card = {1, 1, 1},
+    shadow = {0, 0, 0, 0.2}
+}
+
 function M.saveCategories(data)
     M.rules.data = {}
     local currentCategory

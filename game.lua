@@ -1,6 +1,7 @@
 local composer = require( "composer" )
 local widget = require( "widget" )
 local globals = require 'globals'
+local icons = require 'icons'
 
 local scene = composer.newScene()
 
@@ -43,18 +44,14 @@ local function updateCardColor()
     local totalPlayers = #globals.rules.players or 4
     
     -- Крок відтінку залежить від кількості гравців, щоб кольори максимально відрізнялися
-    -- Додаємо зміщення (наприклад, 35), щоб перший колір не завжди був червоним
     local hue = ((thisPlayer - 1) * (360 / totalPlayers) + 35) % 360
     
-    -- Насиченість 75%, Яскравість 50% для закритої картки (соковитий колір)
-    local r, g, b = HSLtoRGB(hue, 0.75, 0.5)
+    local r, g, b = HSLtoRGB(hue, 0.7, 0.5)
     currentCardColor = { r, g, b }
     
-    -- Трохи світліший відтінок для відкритої картки (Яскравість 58%)
-    local ro, go, bo = HSLtoRGB(hue, 0.75, 0.58)
+    local ro, go, bo = HSLtoRGB(hue, 0.7, 0.6)
     currentCardColorOpen = { ro, go, bo }
     
-    -- Одразу фарбуємо картку, якщо вона вже створена
     if card then
         card:setFillColor(unpack(currentCardColor))
     end
@@ -65,53 +62,59 @@ local function prepare()
     variants = {}
     isRoundOver = false
     
-    local reply = { unpack(globals.rules.players) }
-    
-    for i = 1, globals.rules.spies do
-        if #reply > 0 then
-            local rand = math.random(1, #reply)
-            table.insert(imposters, reply[rand])
-            table.remove(reply, rand)
-        end
-    end
+    if globals.isMultiplayer then
+        imposters = globals.rules.imposters
+        wishedWord = globals.rules.wishedWord
+        thisPlayer = table.indexOf(globals.rules.players, globals.myPlayerName) or 1
+        title.text = string.upper(globals.myPlayerName or "PLAYER")
+        nextPlayer.isVisible = false -- No "Next Player" in multiplayer
+    else
+        local reply = { unpack(globals.rules.players) }
         
-    for k, v in pairs(globals.rules.categories) do
-        if globals.rules.data[v] then
-            for q = 1, #globals.rules.data[v] do
-                table.insert(variants, globals.rules.data[v][q])
+        for i = 1, globals.rules.spies do
+            if #reply > 0 then
+                local rand = math.random(1, #reply)
+                table.insert(imposters, reply[rand])
+                table.remove(reply, rand)
             end
         end
-    end
+            
+        for k, v in pairs(globals.rules.categories) do
+            if globals.rules.data[v] then
+                for q = 1, #globals.rules.data[v] do
+                    table.insert(variants, globals.rules.data[v][q])
+                end
+            end
+        end
 
-    if #variants > 0 then
-        wishedWord = variants[math.random(#variants)]
-    else
-        wishedWord = "NO WORDS"
+        if #variants > 0 then
+            wishedWord = variants[math.random(#variants)]
+        else
+            wishedWord = "NO WORDS"
+        end
+        
+        local name = globals.rules.players[thisPlayer] or "PLAYER"
+        title.text = string.upper(name)
+        nextPlayer.isVisible = true
     end
     
-    local name = globals.rules.players[thisPlayer] or "PLAYER"
-    title.text = string.upper(name)
-    
-    -- Оновлюємо колір для першого гравця
     updateCardColor()
 
-    -- Повертаємо видимість елементів карти та скидаємо кнопку
     cardGroup.isVisible = true
     title.isVisible = true
     if finalText then finalText.isVisible = false end
     if nextPlayer then nextPlayer:setLabel("NEXT PLAYER") end
 end
 
--- Перехід до наступного гравця або завершення раунду
 local function toNext()
-    -- Якщо раунд закінчено і натиснуто кнопку "START NEW GAME"
+    if globals.isMultiplayer then return end -- Should not be reachable
+    
     if isRoundOver then
         thisPlayer = 1
         prepare()
         return true
     end
 
-    -- Скидаємо фокус екрана та прапорець фліпу, щоб кнопка ніколи не блокувалася
     display.currentStage:setFocus(nil)
     isFlipped = false
     if flipTransition then 
@@ -119,28 +122,22 @@ local function toNext()
         flipTransition = nil
     end
     
-    -- Повертаємо картку у вихідний стан (лицьовою стороною вниз)
     cardGroup.xScale = 1
     if card then card:setFillColor(unpack(currentCardColor)) end
     if cardText then cardText.text = 'TAP FOR FLIP' end
 
-    -- Логіка зміни гравця
     thisPlayer = thisPlayer + 1
     
     if thisPlayer > #globals.rules.players then
-        -- Усі гравці подивилися свої картки!
         isRoundOver = true
-        cardGroup.isVisible = false -- Ховаємо картку
-        title.isVisible = false     -- Ховаємо ім'я верхнього гравця
+        cardGroup.isVisible = false 
+        title.isVisible = false     
         
-        -- Обираємо випадкового гравця, який ходитиме першим
         local randomFirstPlayer = globals.rules.players[math.random(1, #globals.rules.players)]
         
-        -- Показуємо текст фіналу
         finalText.text = "ALL PLAYERS KNOW ROLES!\n\nFIRST PLAYER:\n" .. string.upper(randomFirstPlayer)
         finalText.isVisible = true
         
-        -- Міняємо текст на кнопці
         nextPlayer:setLabel("START NEW GAME")
     else
         local name = globals.rules.players[thisPlayer] or "PLAYER"
@@ -149,12 +146,10 @@ local function toNext()
     end
 end
 
--- Анімація фліпу картки
 local flipTransition 
 local isFlipped = false 
 
 local function flip(event)
-    -- Якщо раунд завершено, ігноруємо тачі до картки
     if isRoundOver then return true end
 
     local target = event.target 
@@ -175,7 +170,6 @@ local function flip(event)
                 
                 cardText.text = isImposter and 'YOU IMPOSTER!' or wishedWord
                 
-                -- Використовуємо згенерований світлий колір для відкритої картки
                 card:setFillColor(unpack(currentCardColorOpen))
                 
                 flipTransition = transition.to(cardGroup, {
@@ -205,7 +199,6 @@ local function flip(event)
             xScale = 0,
             transition = easing.outQuad,
             onComplete = function()
-                -- Повертаємо згенерований базовий колір для закритої картки
                 card:setFillColor(unpack(currentCardColor))
                 cardText.text = 'TAP FOR FLIP'
                 
@@ -231,41 +224,43 @@ function scene:create( event )
         display.contentCenterY, 
         display.safeActualContentWidth, 
         display.safeActualContentHeight)
-    background:setFillColor(0.65, 0.8, 0.8)
+    background:setFillColor(unpack(globals.theme.background))
 
-    local upBar = display.newRect(sceneGroup, display.contentCenterX, globals.upside + 40, globals.safeWidth, 80)
-    upBar:setFillColor(0.55, 0.7, 0.7)
+    local upBar = display.newRect(sceneGroup, display.contentCenterX, globals.upside + 50, globals.safeWidth, 100)
+    upBar:setFillColor(unpack(globals.theme.primary))
     
-    local back = display.newImage(sceneGroup, 'back-arrow.png', globals.leftside + 50, upBar.y)
-    back.width, back.height = 60, 60
-    back:addEventListener('tap', function() composer.gotoScene( "menu" ) end)
+    local backGroup = icons.newBack(sceneGroup, globals.leftside + 50, upBar.y, 40, globals.theme.buttonLabel)
+    backGroup:addEventListener('tap', function() composer.gotoScene( "menu" ) end)
     
     sceneGroup:insert(cardGroup)
     cardGroup.x, cardGroup.y = display.contentCenterX, display.contentCenterY - 30
     
-    card = display.newRoundedRect(cardGroup, 0, 0, 320, 450, 60)
-    card:setFillColor(unpack(currentCardColor)) -- Ставимо стартовий колір
+    card = display.newRoundedRect(cardGroup, 0, 0, 320, 450, 40)
+    card:setFillColor(unpack(currentCardColor)) 
     card:addEventListener('touch', flip)
     
-    local textBg = display.newRoundedRect(cardGroup, 0, 110, 300, 180, 60)
-    textBg:setFillColor(1, 1, 1, 0.3)
+    local shadow = display.newRoundedRect(cardGroup, 0, 4, 320, 450, 40)
+    shadow:setFillColor(unpack(globals.theme.shadow))
+    shadow:toBack()
+
+    local textBg = display.newRoundedRect(cardGroup, 0, 110, 280, 160, 30)
+    textBg:setFillColor(1, 1, 1, 0.4)
     
     cardText = display.newText({
         parent = cardGroup, 
         text = 'TAP FOR FLIP', 
         x = 0, y = textBg.y, 
-        width = textBg.width, 
+        width = textBg.width - 40, 
         height = 0,
         font = native.systemFontBold, 
-        fontSize = 35,
+        fontSize = 32,
         align = 'center',
     })
-    cardText:setFillColor(0.6, 0, 0.6)
+    cardText:setFillColor(unpack(globals.theme.text))
     
-    title = display.newText(cardGroup, "PLAYER", 0, -150, native.systemFontBold, 40)
-    title:setFillColor(0, 0, 0)
+    title = display.newText(cardGroup, "PLAYER", 0, -150, native.systemFontBold, 44)
+    title:setFillColor(1, 1, 1)
     
-    -- Створення тексту для випадкового першого гравця (ховається за замовчуванням)
     finalText = display.newText({
         parent = sceneGroup,
         text = "",
@@ -276,7 +271,7 @@ function scene:create( event )
         fontSize = 32,
         align = "center"
     })
-    finalText:setFillColor(0.2, 0.2, 0.2)
+    finalText:setFillColor(unpack(globals.theme.text))
     finalText.isVisible = false
 
     nextPlayer = widget.newButton({
@@ -284,11 +279,12 @@ function scene:create( event )
         y = display.contentCenterY + display.actualContentHeight / 2 - 100,
         label = "NEXT PLAYER",
         shape = "roundedRect",
-        width = 280, height = 80,
+        width = 300, height = 80,
         cornerRadius = 15,
-        fontSize = 20,
-        labelColor = { default={ 1, 1, 1 }, over={ 1, 1, 1 } },
-        fillColor = { default={0, 0, 0}, over={0, 0, 0, 0.8} },
+        fontSize = 24,
+        font = native.systemFontBold,
+        labelColor = { default=globals.theme.buttonLabel, over=globals.theme.buttonLabel },
+        fillColor = { default=globals.theme.primary, over=globals.theme.secondary },
     })
     nextPlayer:addEventListener('tap', toNext)
     sceneGroup:insert(nextPlayer)
